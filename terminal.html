@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS TERMINAL | PROTOCOLO_SAUL</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTÉTICA DE LA HABITACIÓN OSCURA --- */
+        :root {
+            --term-green: #1aff1a;
+            --term-glow: rgba(26, 255, 26, 0.3);
+            --monitor-body: #121212;
+            --pc-case: #0a0a0a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; }
+
+        body {
+            background: #000; /* Habitación oscura */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            font-family: 'VT323', monospace;
+        }
+
+        /* --- LA COMPUTADORA FÍSICA --- */
+        .pc-container {
+            position: relative;
+            width: 900px;
+            height: 650px;
+            background: var(--pc-case);
+            border: 4px solid #1a1a1a;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 
+                0 0 80px rgba(0,0,0,1),
+                inset 0 0 30px rgba(255,255,255,0.02);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: rotateX(2deg);
+        }
+
+        /* Resplandor de la pantalla en la "mesa" */
+        .pc-container::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            width: 130%;
+            height: 50px;
+            background: var(--term-glow);
+            filter: blur(50px);
+            opacity: 0.4;
+        }
+
+        /* EL MONITOR ANTIGUO */
+        .monitor {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 10px;
+            border: 15px solid var(--monitor-body);
+            position: relative;
+            box-shadow: inset 0 0 100px #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* EFECTO CRT (Líneas de escaneo y parpadeo) */
+        .crt-fx {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 4px, 4px 100%;
+            pointer-events: none;
+            z-index: 10;
+            animation: flicker-term 0.1s infinite;
+        }
+
+        @keyframes flicker-term {
+            0% { opacity: 0.97; } 50% { opacity: 1; } 100% { opacity: 0.98; }
+        }
+
+        /* --- CONTENIDO DE LA PANTALLA --- */
+        .screen-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            color: var(--term-green);
+            text-shadow: 0 0 10px var(--term-green);
+        }
+
+        .header-info {
+            border-bottom: 2px solid var(--term-green);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        #terminal-history {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 1.5rem;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .input-line {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        #user-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--term-green);
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+            outline: none;
+            text-transform: uppercase;
+        }
+
+        /* --- PANTALLA DE BOOT (INICIO) --- */
+        #boot-overlay {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- EFECTO "GARRAS" --- */
+        .scratch-anim {
+            position: absolute;
+            inset: 0;
+            background: url('https://www.transparenttextures.com/patterns/scratched-metal.png');
+            opacity: 0;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .active-scratch {
+            opacity: 0.5;
+            animation: shake-term 0.2s infinite;
+        }
+
+        @keyframes shake-term {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-2px, -1px); }
+            100% { transform: translate(0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pc-container">
+        <div class="monitor">
+            <div class="crt-fx"></div>
+            <div id="scratch-layer" class="scratch-anim"></div>
+
+            <div id="boot-overlay">
+                <p style="color:white; margin-bottom: 20px;">NEXUS CORE BIOS v4.02</p>
+                <div style="width: 250px; height: 4px; background: #222; border-radius: 10px;">
+                    <div id="boot-fill" style="width:0%; height:100%; background:var(--term-green); box-shadow: 0 0 10px var(--term-green);"></div>
+                </div>
+                <p id="boot-status" style="margin-top: 15px; font-size: 0.8rem; color: #555;">IDENTIFICANDO HARDWARE...</p>
+            </div>
+
+            <div class="screen-content">
+                <div class="header-info">
+                    NEXUS TERMINAL | NODE: 04-SAUL | ENCRIPTACIÓN: ACTIVA
+                </div>
+
+                <div id="terminal-history">
+                    [SISTEMA LISTO]<br>
+                    AUTORIZACIÓN NIVEL 5 CONCEDIDA A: SAUL.<br>
+                    ------------------------------------------<br>
+                    ESCRIBA 'LISTA' PARA VER ARCHIVOS DISPONIBLES.
+                </div>
+
+                <div class="input-line">
+                    <span style="font-weight: bold;">SAUL_ROOT_@:</span>
+                    <input type="text" id="user-input" autofocus onkeypress="NexusTerm.run(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* NEXUS TERMINAL KERNEL v2.5
+           ADMIN: SAUL
+        */
+
+        const NexusTerm = {
+            init() {
+                let progress = 0;
+                const bar = document.getElementById('boot-fill');
+                const status = document.getElementById('boot-status');
+                const msgs = ["SANEANDO DISCOS...", "CONECTANDO CON SAUL_SERVER...", "BYPASSING PLAYTIME_CO_FIREWALL...", "NEXUS_TERM_OPEN"];
+
+                const step = setInterval(() => {
+                    progress += Math.random() * 10;
+                    if(progress > 100) progress = 100;
+                    bar.style.width = progress + '%';
+                    
+                    const idx = Math.floor((progress/100)*(msgs.length-1));
+                    status.innerText = msgs[idx];
+
+                    if(progress >= 100) {
+                        clearInterval(step);
+                        setTimeout(() => document.getElementById('boot-overlay').style.display = 'none', 800);
+                    }
+                }, 140);
+            },
+
+            run(e) {
+                if(e.key === 'Enter') {
+                    const cmd = e.target.value.toUpperCase().trim();
+                    const history = document.getElementById('terminal-history');
+                    const scratch = document.getElementById('scratch-layer');
+                    let r = "";
+
+                    // --- LÓGICA DE COMANDOS SAUL ---
+                    switch(cmd) {
+                        case 'LISTA':
+                            r = `<br>> DIRECTORIOS:<br>  - /DATA_LEAKS/<br>  - /GARRAS_ARCHIVE/<br>  - /POPPY_PLAYTIME_C4/`;
+                            break;
+
+                        case 'GARRAS 2026':
+                            r = `<br><span style="color:#ef4444">[AVISO]: ABRIENDO ARCHIVO CORRUPTO.</span><br>FILTRACIÓN: El Prototipo 1006 fue visto por última vez en el sector 4. Fecha estimada: Q1 2026.`;
+                            scratch.classList.add('active-scratch');
+                            setTimeout(() => scratch.classList.remove('active-scratch'), 2000);
+                            break;
+
+                        case 'GARRAS 2027':
+                            r = `<br><span style="color:#ef4444">[CRÍTICO]: ACCESO NO AUTORIZADO.</span><br>REGISTRO: "2027 será el año del colapso final de Playtime Co."<br>> Audio encontrado: *Sonidos de metal rompiéndose*`;
+                            document.body.style.filter = "invert(1)";
+                            setTimeout(() => document.body.style.filter = "none", 500);
+                            break;
+
+                        case 'CLEAR':
+                            history.innerHTML = "[TERMINAL REINICIADA]";
+                            e.target.value = ""; return;
+
+                        case 'AYUDA':
+                            r = "<br>COMANDOS DISPONIBLES: LISTA, GARRAS 2026, GARRAS 2027, CLEAR, EXIT.";
+                            break;
+
+                        case 'EXIT':
+                            window.location.href = "index.html"; 
+                            return;
+
+                        default:
+                            r = `<br>ERROR: COMANDO '${cmd}' NO VÁLIDO EN EL KERNEL DE SAUL.`;
+                    }
+
+                    history.innerHTML += `<br><span style='color:#666'>> ${cmd}</span><br>${r}<br>`;
+                    history.scrollTop = history.scrollHeight;
+                    e.target.value = "";
+                }
+            }
+        };
+
+        window.onload = () => NexusTerm.init();
+    </script>
+</body>
+</html>
